@@ -8,6 +8,11 @@ env:
   PGPASSWORD: postgrespassword
 
 tasks:
+  shell:
+    desc: "Starts an interactive psql shell"
+    interactive: true
+    cmd: pkgx psql
+
   reload:
     desc: "Hot-reload SQL changes"
     watch: true
