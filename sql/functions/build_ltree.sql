@@ -11,10 +11,24 @@ BEGIN
     WITH RECURSIVE tree AS (
         -- The initial (non-recursive) part selects the starting node
         SELECT
-            parent_id AS parent_id,
-            child_id AS child_id,
-            UPPER(REPLACE(base_hierarchy.parent_id::TEXT || '.' || base_hierarchy.child_id::TEXT, '-', '')) AS ltree_path,
-            UPPER(base_parent.code::TEXT || '.' || base_child.code::TEXT) AS ltree_code_path
+            base_hierarchy.parent_id AS parent_id,
+            base_hierarchy.child_id AS child_id,
+            ARRAY_CAT(
+                ARRAY(
+                    SELECT UPPER(REPLACE(base_parent.id::TEXT, '-', ''))
+                ),
+                ARRAY(
+                    SELECT UPPER(REPLACE(base_child.id::TEXT, '-', ''))
+                )
+            ) AS path,
+            ARRAY_CAT(
+                ARRAY(
+                    SELECT UPPER(base_parent.code)
+                ),
+                ARRAY(
+                    SELECT UPPER(base_child.code)
+                )
+            ) AS code_path
         FROM org_unit_hierarchy base_hierarchy
         JOIN org_unit base_parent ON base_parent.id = base_hierarchy.parent_id
         JOIN org_unit base_child ON base_child.id = base_hierarchy.child_id
@@ -27,15 +41,23 @@ BEGIN
         SELECT
             h.parent_id AS parent_id,
             h.child_id AS child_id,
-            UPPER(REPLACE(t.ltree_path || '.' || child.id::TEXT, '-', '')) AS ltree_path,
-            UPPER(t.ltree_code_path || '.' || child.code) AS ltree_code_path
+            ARRAY_PREPEND(
+                UPPER(REPLACE(h.parent_id::TEXT, '-', '')),
+                t.path
+            ) AS path,
+            ARRAY_PREPEND(
+                UPPER(parent.code),
+                t.code_path
+            ) AS code_path
         FROM org_unit_hierarchy h
+        JOIN org_unit parent ON parent.id = h.parent_id
         JOIN org_unit child ON child.id = h.child_id
-        JOIN tree t ON t.child_id = h.parent_id
+        JOIN tree t ON t.parent_id = h.child_id
     )
-    SELECT ltree_path, ltree_code_path
+    SELECT array_to_string(path, '.'), array_to_string(code_path, '.')
     INTO var_ltree_path, var_ltree_code_path
-    FROM tree;
+    FROM tree
+    WHERE child_id = NEW.child_id;
 
     RAISE NOTICE 'Computed LTREE path: %', var_ltree_path;
     RAISE NOTICE 'Computed LTREE code_path: %', var_ltree_code_path;
