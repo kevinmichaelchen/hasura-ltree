@@ -131,7 +131,7 @@ PGPASSWORD=postgrespassword pkgx psql \
   -p 15432 \
   -U postgres \
   -d postgres \
-  --command="truncate org_unit_hierarchy; delete from org_unit where name != 'ROOT'; begin; insert into org_unit (name) values ('CHILD'); insert into org_unit_hierarchy (parent_id, child_id) select (select id from org_unit where name = 'ROOT'), (select id from org_unit where name = 'CHILD'); commit;"
+  --command="truncate org_unit_hierarchy; begin; insert into org_unit_hierarchy (parent_id, child_id) select (select id from org_unit where name = 'ROOT'), (select id from org_unit where name = 'CHILD'); commit;"
 ```
 
 ## Under the hood

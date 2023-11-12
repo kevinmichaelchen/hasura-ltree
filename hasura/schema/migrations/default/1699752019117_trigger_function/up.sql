@@ -3,12 +3,18 @@ CREATE OR REPLACE FUNCTION prepare_org_unit()
 RETURNS TRIGGER AS $$
 DECLARE
   var_code TEXT;
+  var_path TEXT;
 BEGIN
     -- Generate a new human-readable code for this Org Unit
     var_code := UPPER(encode(gen_random_bytes(2), 'hex') || encode(gen_random_bytes(2), 'hex'));
+    var_path := UPPER(REPLACE(NEW.id::TEXT, '-', ''));
+
+    RAISE NOTICE 'New code: %', var_code;
+    RAISE NOTICE 'New path: %', var_path;
+    RAISE NOTICE 'New code_path: %', var_code;
 
     NEW.code := var_code;
-    NEW.path := UPPER(REPLACE(NEW.id::text, '-', ''));
+    NEW.path := var_path;
     NEW.code_path := var_code;
 
     RETURN NEW;
@@ -35,11 +41,12 @@ BEGIN
         SELECT
             parent_id,
             child_id,
-            UPPER(REPLACE(child_id::TEXT, '-', '')) AS ltree_path,
-            UPPER(REPLACE(code::TEXT, '-', '')) AS ltree_code_path
-        FROM org_unit_hierarchy
-        JOIN org_unit ON org_unit.id = org_unit_hierarchy.child_id
-        WHERE child_id = NEW.child_id
+            UPPER(REPLACE(base_hierarchy.parent_id::TEXT || '.' || base_hierarchy.child_id::TEXT, '-', '')) AS ltree_path,
+            UPPER(REPLACE(base_parent.code::TEXT || '.' || base_child.code::TEXT, '-', '')) AS ltree_code_path
+        FROM org_unit_hierarchy base_hierarchy
+        JOIN org_unit base_parent ON base_parent.id = base_hierarchy.parent_id
+        JOIN org_unit base_child ON base_child.id = base_hierarchy.child_id
+        WHERE base_hierarchy.child_id = NEW.child_id
 
         UNION ALL
 
@@ -48,11 +55,11 @@ BEGIN
         SELECT
             h.parent_id,
             h.child_id,
-            UPPER(REPLACE(t.ltree_path || '.' || h.child_id::TEXT, '-', '')),
-            UPPER(REPLACE(t.ltree_code_path || '.' || ou.code::TEXT, '-', ''))
+            UPPER(REPLACE(t.ltree_path || '.' || child.id::TEXT, '-', '')) AS ltree_path,
+            UPPER(REPLACE(t.ltree_code_path || '.' || child.code::TEXT, '-', '')) AS ltree_code_path
         FROM org_unit_hierarchy h
-        JOIN org_unit ou ON ou.id = h.child_id
-        JOIN tree t ON h.child_id = t.parent_id
+        JOIN org_unit child ON child.id = h.child_id
+        JOIN tree t ON t.parent_id = h.child_id
     )
     SELECT ltree_path, ltree_code_path
     INTO var_ltree_path, var_ltree_code_path
