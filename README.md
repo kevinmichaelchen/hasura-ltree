@@ -37,15 +37,64 @@ curl -fsS https://pkgx.sh | sh
 
 [pkgx]: https://pkgx.sh/
 
-## Performing Queries
+## Using the API
 
-Let's imagine we have the following Org Unit hierarchy:
+### Creating a root node
 
-- AAA
-- BBB
-- CCC
+```graphql
+mutation CreateRoot {
+  insertOrgUnitOne(
+    object: {
+      name: "ROOT"
+    }
+  ) {
+    path
+    codePath
+  }
+}
+```
 
-The terminal node in the tree would have a `path` of `AAA.BBB.CCC`.
+### Creating a child
+
+It's important to pay attention to the `parentId` here:
+
+```graphql
+mutation CreateChild {
+  insertOrgUnitHierarchyOne(
+    object: {
+      parentId: "b1316073-bffd-41a2-a0a8-707f98489739"
+      child: {
+        data: {
+          name: "CHILD"
+        }
+      }
+    }
+  ) {
+    child {
+      path
+      codePath
+    }
+  }
+}
+```
+
+### Listing everything
+
+```graphql
+query ListOrgUnits {
+  orgUnit {
+    name
+    id
+    path
+    code
+    codePath
+  }
+  orgUnitHierarchy {
+    parentId
+    childId
+  }
+}
+```
 
 ### Querying for ancestors (and self)
 
