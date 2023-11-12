@@ -1,8 +1,14 @@
 # hasura-ltree
 
-Exploring LTREEs with Hasura.
+This is a demo that explores LTREEs with Hasura.
 
-LTREEs are perfect for any kind of hierarchical data model.
+LTREEs are one method for querying hierarchical data models.
+
+## Motivation
+
+There are many ways to build systems of hierarchy. The advantage of LTREEs is that they simplify _ancestor path hierarchical queries_, but they come at some other costs, like not being immune to the _hierarchy reorganization problem_.
+
+Because of Hasura's support for LTREEs, they seem like a compelling path.
 
 - [Blog — Query hierarchical data structures on Hasura with Postgres ltree][blog-query]
 - [Blog — GraphQL and Tree Data Structures with Postgres on Hasura GraphQL engine][blog-tree]
@@ -65,12 +71,7 @@ mutation CreateNodes {
 We can perform an insert:
 
 ```shell
-PGPASSWORD=postgrespassword pkgx psql \
-  -h localhost \
-  -p 15432 \
-  -U postgres \
-  -d postgres \
-  --command="truncate org_unit_hierarchy; begin; insert into org_unit_hierarchy (parent_id, child_id) select (select id from org_unit where name = 'L1'), (select id from org_unit where name = 'L2'); insert into org_unit_hierarchy (parent_id, child_id) select (select id from org_unit where name = 'L2'), (select id from org_unit where name = 'L3'); commit;"
+pkgx task sql:create
 ```
 
 ### Listing everything
@@ -115,6 +116,8 @@ As of this writing, PG 16 is [not supported][rds-postgres-release-cal] in AWS RD
 [hyphen-patch]: https://github.com/postgres/postgres/commit/b1665bf01e5f4200d37addfc2ddc406ff7df14a5
 [rds-postgres-release-cal]: https://docs.aws.amazon.com/AmazonRDS/latest/PostgreSQLReleaseNotes/postgresql-release-calendar.html#Release.Calendar
 
-## Under the hood
+## Further Reading
 
-https://medium.com/swlh/postgres-recursive-query-cte-or-recursive-function-3ea1ea22c57c
+- [Recursive Queries in PostgreSQL for Hierarchical Data](https://indrajith.me/posts/recursive-queries-in-postgresql-for-hierarchial-data/)
+- [Postgres Recursive Query(CTE) or Recursive Function?](https://medium.com/swlh/postgres-recursive-query-cte-or-recursive-function-3ea1ea22c57c)
+- [Modeling Hierarchical Tree Data in PostgreSQL](https://leonardqmarcq.com/posts/modeling-hierarchical-tree-data)
