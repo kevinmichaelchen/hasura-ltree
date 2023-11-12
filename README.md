@@ -36,3 +36,54 @@ curl -fsS https://pkgx.sh | sh
 > You can easily uninstall pkgx with `sudo rm $(which pkgx)` and `sudo rm -rf ~/.pkgx`
 
 [pkgx]: https://pkgx.sh/
+
+## Performing Queries
+
+Let's imagine we have the following Org Unit hierarchy:
+
+- AAA
+- BBB
+- CCC
+
+The terminal node in the tree would have a `path` of `AAA.BBB.CCC`.
+
+### Querying for ancestors (and self)
+
+```graphql
+query {
+  test(where: { path: { _ancestor: "AAA.BBB.CCC" } }) {
+    path
+  }
+}
+```
+
+## Are hyphens allowed?
+
+UUIDs contain hyphens. Are hyphens allowed in LTREEs?
+
+[Historically, no][hyphen-support].
+
+However, that will change in Postgres 16 with this [patch][hyphen-patch].
+
+As of this writing, PG 16 is [not supported][rds-postgres-release-cal] in AWS RDS.
+
+[hyphen-support]: https://stackoverflow.com/questions/29887093/valid-characters-in-postgres-ltree-label-in-utf8-charset
+[hyphen-patch]: https://github.com/postgres/postgres/commit/b1665bf01e5f4200d37addfc2ddc406ff7df14a5
+[rds-postgres-release-cal]: https://docs.aws.amazon.com/AmazonRDS/latest/PostgreSQLReleaseNotes/postgresql-release-calendar.html#Release.Calendar
+
+## Using `psql`
+
+We can perform an insert:
+
+```shell
+PGPASSWORD=postgrespassword pkgx psql \
+  -h localhost \
+  -p 15432 \
+  -U postgres \
+  -d postgres \
+  --command="insert into org_unit (name) values ('org 1');"
+```
+
+## Under the hood
+
+https://medium.com/swlh/postgres-recursive-query-cte-or-recursive-function-3ea1ea22c57c
