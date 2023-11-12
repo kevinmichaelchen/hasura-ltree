@@ -121,3 +121,4 @@ As of this writing, PG 16 is [not supported][rds-postgres-release-cal] in AWS RD
 - [Recursive Queries in PostgreSQL for Hierarchical Data](https://indrajith.me/posts/recursive-queries-in-postgresql-for-hierarchial-data/)
 - [Postgres Recursive Query(CTE) or Recursive Function?](https://medium.com/swlh/postgres-recursive-query-cte-or-recursive-function-3ea1ea22c57c)
 - [Modeling Hierarchical Tree Data in PostgreSQL](https://leonardqmarcq.com/posts/modeling-hierarchical-tree-data)
+- [Wikipedia — Nested set model](https://en.wikipedia.org/wiki/Nested_set_model)
