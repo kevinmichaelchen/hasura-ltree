@@ -48,6 +48,7 @@ mutation CreateRoot {
       name: "ROOT"
     }
   ) {
+    id
     path
     codePath
   }
@@ -62,7 +63,7 @@ It's important to pay attention to the `parentId` here:
 mutation CreateChild {
   insertOrgUnitHierarchyOne(
     object: {
-      parentId: "b1316073-bffd-41a2-a0a8-707f98489739"
+      parentId: "c46666ab-6426-4196-a093-e45e09f207e6"
       child: {
         data: {
           name: "CHILD"
@@ -130,7 +131,7 @@ PGPASSWORD=postgrespassword pkgx psql \
   -p 15432 \
   -U postgres \
   -d postgres \
-  --command="insert into org_unit (name) values ('org 1');"
+  --command="truncate org_unit_hierarchy; delete from org_unit where name != 'ROOT'; begin; insert into org_unit (name) values ('CHILD'); insert into org_unit_hierarchy (parent_id, child_id) select (select id from org_unit where name = 'ROOT'), (select id from org_unit where name = 'CHILD'); commit;"
 ```
 
 ## Under the hood
