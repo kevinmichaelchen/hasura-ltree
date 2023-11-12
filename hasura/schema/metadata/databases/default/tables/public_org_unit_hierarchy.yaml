@@ -1,0 +1,10 @@
+table:
+  name: org_unit_hierarchy
+  schema: public
+object_relationships:
+  - name: child
+    using:
+      foreign_key_constraint_on: child_id
+  - name: parent
+    using:
+      foreign_key_constraint_on: parent_id

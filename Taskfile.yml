@@ -7,6 +7,8 @@ includes:
   hasura:
     taskfile: taskfiles/hasura.yml
     dir: ./hasura
+  sql:
+    taskfile: taskfiles/sql.yml
 
 tasks:
   start:
@@ -18,6 +20,8 @@ tasks:
       - pkgx docker-clean stop || true
       # Start database
       - docker compose up -d postgres
+      # Sleep to allow database some time to start
+      - sleep 3
       # Wait until Postgres is healthy... with Exponential Backoff
       - pkgx eb -- pkgx pg_isready -U postgres -d postgres -p 15432 -h 127.0.0.1
       # Start Hasura
