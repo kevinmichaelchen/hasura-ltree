@@ -1,0 +1,31 @@
+version: "3"
+
+env:
+  PGHOST: localhost
+  PGPORT: 15432
+  PGDATABASE: postgres
+  PGUSER: postgres
+  PGPASSWORD: postgrespassword
+
+tasks:
+  reload:
+    desc: "Hot-reload SQL changes"
+    watch: true
+    sources:
+      - "sql/**/*.sql"
+    cmds:
+      - |
+        pkgx psql \
+          -a \
+          -f sql/functions/build_ltree.sql
+
+  create:
+    desc: "Create hierarchy"
+    cmds:
+      - pkgx psql --command="truncate org_unit_hierarchy;"
+      - |
+        pkgx psql \
+          --command="begin; \
+          insert into org_unit_hierarchy (parent_id, child_id) select (select id from org_unit where name = 'L1'), (select id from org_unit where name = 'L2'); \
+          insert into org_unit_hierarchy (parent_id, child_id) select (select id from org_unit where name = 'L2'), (select id from org_unit where name = 'L3'); \
+          commit;"
