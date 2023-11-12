@@ -39,44 +39,38 @@ curl -fsS https://pkgx.sh | sh
 
 ## Using the API
 
-### Creating a root node
+### Create nodes
 
 ```graphql
-mutation CreateRoot {
-  insertOrgUnitOne(
-    object: {
-      name: "ROOT"
-    }
+mutation CreateNodes {
+  insertOrgUnit(
+    objects: [
+      {name: "L1"},
+      {name: "L2"},
+      {name: "L3"}
+    ]
   ) {
-    id
-    path
-    codePath
-  }
-}
-```
-
-### Creating a child
-
-It's important to pay attention to the `parentId` here:
-
-```graphql
-mutation CreateChild {
-  insertOrgUnitHierarchyOne(
-    object: {
-      parentId: "c46666ab-6426-4196-a093-e45e09f207e6"
-      child: {
-        data: {
-          name: "CHILD"
-        }
-      }
-    }
-  ) {
-    child {
+    returning {
+      name
+      id
       path
       codePath
     }
   }
 }
+```
+
+### Creating hierarchy
+
+We can perform an insert:
+
+```shell
+PGPASSWORD=postgrespassword pkgx psql \
+  -h localhost \
+  -p 15432 \
+  -U postgres \
+  -d postgres \
+  --command="truncate org_unit_hierarchy; begin; insert into org_unit_hierarchy (parent_id, child_id) select (select id from org_unit where name = 'L1'), (select id from org_unit where name = 'L2'); insert into org_unit_hierarchy (parent_id, child_id) select (select id from org_unit where name = 'L2'), (select id from org_unit where name = 'L3'); commit;"
 ```
 
 ### Listing everything
@@ -120,19 +114,6 @@ As of this writing, PG 16 is [not supported][rds-postgres-release-cal] in AWS RD
 [hyphen-support]: https://stackoverflow.com/questions/29887093/valid-characters-in-postgres-ltree-label-in-utf8-charset
 [hyphen-patch]: https://github.com/postgres/postgres/commit/b1665bf01e5f4200d37addfc2ddc406ff7df14a5
 [rds-postgres-release-cal]: https://docs.aws.amazon.com/AmazonRDS/latest/PostgreSQLReleaseNotes/postgresql-release-calendar.html#Release.Calendar
-
-## Using `psql`
-
-We can perform an insert:
-
-```shell
-PGPASSWORD=postgrespassword pkgx psql \
-  -h localhost \
-  -p 15432 \
-  -U postgres \
-  -d postgres \
-  --command="truncate org_unit_hierarchy; begin; insert into org_unit_hierarchy (parent_id, child_id) select (select id from org_unit where name = 'ROOT'), (select id from org_unit where name = 'CHILD'); commit;"
-```
 
 ## Under the hood
 
